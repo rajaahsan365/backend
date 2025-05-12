@@ -7,11 +7,11 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Ensure uploads directory exists
+// Target uploads directory
 const uploadDir = path.join(__dirname, '../../public/uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-}
+
+// ✅ Create parent folders if missing
+fs.mkdirSync(uploadDir, { recursive: true });
 
 // Configure disk storage
 const storage = multer.diskStorage({
