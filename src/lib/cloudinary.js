@@ -1,14 +1,20 @@
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
+import dotenv from 'dotenv';
+dotenv.config({
+    path: "./.env",
+});
 
 // Configuration
 cloudinary.config({
-    cloud_name: 'dvfw8zwjh',
-    api_key: '568417226133178',
-    api_secret: '<your_api_secret>' // Click 'View API Keys' above to copy your API secret
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const uploadFileToCloudinary = async (filePath) => {
+console.log(process.env.CLOUDINARY_API_SECRET, "----------")
+
+export const uploadFileToCloudinary = async (filePath) => {
     try {
         const result = await cloudinary.uploader.upload(filePath, {
             resource_type: 'auto', // Automatically detect the resource type (image, video, etc.)

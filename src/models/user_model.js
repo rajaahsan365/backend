@@ -1,7 +1,7 @@
-import { Schema } from 'mongoose';
+import { model, Schema } from 'mongoose';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import REGEX_PATTERNS from '../utils/regex_patterns';
+import REGEX_PATTERNS from '../utils/regex_patterns.js';
 
 const userSchema = new Schema(
     {
@@ -106,5 +106,5 @@ userSchema.methods.generateRefreshToken = async function () {
     );
 };
 
-
-export default mongoose.model('User', userSchema);
+const User = model('User', userSchema);
+export default User;
