@@ -1,5 +1,6 @@
 import { uploadFileToCloudinary } from "../lib/cloudinary.js";
 import User from "../models/user_model.js";
+import { TOKEN_COOKIE_OPTIONS } from "../utils/cookies.js";
 import { loginValidation, registerValidation } from "../utils/validate_schema.js";
 
 export const registerController = async (req, res) => {
@@ -32,6 +33,10 @@ export const registerController = async (req, res) => {
 
         const refreshToken = await newUser.generateRefreshToken();
         const accessToken = await newUser.generateAccessToken();
+
+        res.cookie("refreshToken", refreshToken, TOKEN_COOKIE_OPTIONS);
+        res.cookie("accessToken", accessToken, TOKEN_COOKIE_OPTIONS);
+
         res.status(201).json({
             message: 'User registered successfully',
             user: {
@@ -40,11 +45,7 @@ export const registerController = async (req, res) => {
                 phone: newUser.phone,
                 email: newUser.email,
                 logo: newUser.logo,
-            },
-            tokens: {
-                accessToken,
-                refreshToken,
-            },
+            }
         });
     } catch (error) {
         console.error(error);
@@ -60,17 +61,23 @@ export const loginController = async (req, res) => {
             return res.status(400).json({ message: error.details[0].message });
         }
         const { email, password } = req.body;
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).select('+password');
+
         if (!user) {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
-        console.log
-        const isPasswordCorrect = user.isPasswordCorrect(password);
+        const isPasswordCorrect = await user.isPasswordCorrect(password);
+
         if (!isPasswordCorrect) {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
         const refreshToken = await user.generateRefreshToken();
         const accessToken = await user.generateAccessToken();
+
+        res.cookie("refreshToken", refreshToken, TOKEN_COOKIE_OPTIONS);
+        res.cookie("accessToken", accessToken, TOKEN_COOKIE_OPTIONS);
+
+
         res.status(200).json({
             message: 'User logged in successfully',
             user: {
@@ -79,12 +86,25 @@ export const loginController = async (req, res) => {
                 phone: user.phone,
                 email: user.email,
                 logo: user.logo,
-            },
-            tokens: {
-                accessToken,
-                refreshToken,
-            },
+            }
         });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+}
+
+export const logoutController = async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+        if (!refreshToken) {
+            return res.status(400).json({ message: 'Refresh token is required' });
+        }
+
+        res.clearCookie("refreshToken", TOKEN_COOKIE_OPTIONS);
+        res.clearCookie("accessToken", TOKEN_COOKIE_OPTIONS);
+
+        res.status(200).json({ message: 'User logged out successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
