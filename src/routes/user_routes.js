@@ -9,7 +9,7 @@ router
     .post("/login", loginController)
     .post("/logout", logoutController);
 
-router.get("/profile", (req, res) => {
+router.post("/profile", (req, res) => {
     res.render("profile", { title: "Profile" });
 });
 
