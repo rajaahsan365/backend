@@ -12,16 +12,14 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-console.log(process.env.CLOUDINARY_API_SECRET, "----------")
 
-export const uploadFileToCloudinary = async (filePath) => {
+const uploadFileToCloudinary = async (filePath) => {
     try {
         const result = await cloudinary.uploader.upload(filePath, {
             resource_type: 'auto', // Automatically detect the resource type (image, video, etc.)
 
         });
-        console.log('Upload successful:', result);
-        // Optionally, you can delete the local file after uploading
+
         fs.unlinkSync(filePath); // Delete the local file
         return result;
     } catch (error) {
@@ -30,3 +28,11 @@ export const uploadFileToCloudinary = async (filePath) => {
         return null;
     }
 };
+
+const getPublicIdFromUrl = (url) => {
+    const parts = url.split('/');
+    const filename = parts[parts.length - 1];
+    return filename.split('.')[0];
+};
+
+export { uploadFileToCloudinary, getPublicIdFromUrl, cloudinary };
