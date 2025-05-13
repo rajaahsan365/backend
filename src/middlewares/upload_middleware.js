@@ -25,12 +25,43 @@ const storage = multer.diskStorage({
     },
 });
 
+const fileFilter = (req, file, cb) => {
+    const allowedMimeTypes = {
+        video: ['video/mp4', 'video/quicktime', 'video/x-msvideo'],
+        thumbnail: ['image/jpeg', 'image/png', 'image/webp'],
+    };
+
+    const field = file.fieldname;
+    const allowedTypes = allowedMimeTypes[field];
+
+    // If the field isn't one we expect (video or thumbnail), reject it
+    if (!allowedTypes) {
+        console.error(`Unexpected field name: ${field}`);
+        return cb(new Error(`Unexpected field: ${field}`), false);
+    }
+
+    // Check if the file type is allowed for this field
+    if (!allowedTypes.includes(file.mimetype)) {
+        console.error(`Invalid file type for ${field}: ${file.mimetype}`);
+        return cb(new Error(`${field} must be a valid ${field} file type`), false);
+    }
+
+    // Set max file size based on field type
+    const maxSize = field === 'video' ? 100 * 1024 * 1024 : 5 * 1024 * 1024; // 100MB for video, 5MB for thumbnail
+
+    if (file.size > maxSize) {
+        return cb(new Error(`${field} file size exceeds the limit`), false);
+    }
+
+    cb(null, true);
+};
 // Multer middleware
 const upload = multer({
     storage,
     limits: {
-        fileSize: 5 * 1024 * 1024, // 5 MB
+        fileSize: 100 * 1024 * 1024, // Max size for video (100MB)
     },
+    fileFilter,
 });
 
 export default upload;

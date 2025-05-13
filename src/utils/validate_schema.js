@@ -60,3 +60,47 @@ export const loginValidation = (data) => {
     return schema.validate(data, { abortEarly: false }); // Return all errors at once
 };
 
+
+export const videoValidation = (data) => {
+    const schema = Joi.object({
+        title: Joi.string()
+            .min(3)
+            .required()
+            .messages({
+                "string.base": "Title must be a string.",
+                "string.min": "Title must be at least 3 characters long.",
+                "any.required": "Title is required.",
+            }),
+        description: Joi.string()
+            .min(10)
+            .required()
+            .messages({
+                "string.base": "Description must be a string.",
+                "string.min": "Description must be at least 10 characters long.",
+                "any.required": "Description is required.",
+            }),
+        category: Joi.string()
+            .valid(
+                "Education",
+                "Entertainment",
+                "Music",
+                "Sports",
+                "News",
+                "Technology"
+            )
+            .required()
+            .messages({
+                "any.only": 'Category must be one of the following: "Education", "Entertainment", "Music", "Sports", "News", or "Technology".',
+                "any.required": "Category is required.",
+            }),
+        tags: Joi.array()
+            .items(Joi.string())
+            .required()
+            .messages({
+                "array.base": "Tags must be an array of strings.",
+                "any.required": "Tags are required.",
+            }),
+    });
+
+    return schema.validate(data, { abortEarly: false }); // Return all errors at once
+};
