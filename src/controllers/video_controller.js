@@ -2,6 +2,48 @@ import { cloudinary, getPublicIdFromUrl, uploadFileToCloudinary } from "../lib/c
 import Video from "../models/video_model.js";
 import { videoValidation } from "../utils/validate_schema.js";
 
+export const getAllVideos = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+
+        const videos = await Video.find({ userId }).sort({ createdAt: -1 });
+        return res.status(200).json({
+            message: "Videos fetched successfully",
+            videos,
+        });
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+}
+
+export const getVideoById = async (req, res, next) => {
+    try {
+        const { videoId } = req.params;
+
+        if (!videoId) {
+            return res.status(400).json({
+                message: "Video ID is required",
+            });
+        }
+
+        const video = await Video.findById(videoId);
+        if (!video) {
+            return res.status(404).json({
+                message: "Video not found",
+            });
+        }
+
+        return res.status(200).json({
+            message: "Video fetched successfully",
+            video,
+        });
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+}
+
 export const uploadVideo = async (req, res, next) => {
     try {
         const { title, description, category, tags } = req.body;
@@ -160,3 +202,171 @@ export const updateVideo = async (req, res, next) => {
         next(error);
     }
 };
+
+export const deleteVideo = async (req, res, next) => {
+    try {
+        const { videoId } = req.params;
+        const userId = req.user._id;
+
+        if (!videoId) {
+            return res.status(400).json({
+                message: "Video ID is required",
+            });
+        }
+
+        // Check if the user is the owner of the video
+        const videoToDelete = await Video.findById(videoId);
+        if (!videoToDelete) {
+            return res.status(404).json({
+                message: "Video not found",
+            });
+        }
+
+        if (videoToDelete.userId.toString() !== userId.toString()) {
+            return res.status(403).json({
+                message: "You are not authorized to delete this video",
+            });
+        }
+
+        // Delete video from Cloudinary
+        const publicId = getPublicIdFromUrl(videoToDelete.videoUrl);
+        await cloudinary.uploader.destroy(publicId, {
+            resource_type: "video",
+        });
+
+        // Delete thumbnail from Cloudinary
+        const thumbnailPublicId = getPublicIdFromUrl(videoToDelete.thumbnailUrl);
+        await cloudinary.uploader.destroy(thumbnailPublicId); // default resource_type: "image"
+
+        // Delete video from database
+        await Video.findByIdAndDelete(videoId);
+
+        return res.status(200).json({
+            message: "Video deleted successfully",
+        });
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+
+export const likeVideo = async (req, res, next) => {
+    try {
+        const { videoId } = req.params;
+        const userId = req.user._id;
+
+        if (!videoId) {
+            return res.status(400).json({
+                message: "Video ID is required",
+            });
+        }
+
+        // Check if the user has already liked the video
+        const video = await Video.findById(videoId);
+        if (!video) {
+            return res.status(404).json({
+                message: "Video not found",
+            });
+        }
+
+        if (video.likedBy.includes(userId)) {
+            return res.status(400).json({
+                message: "You have already liked this video",
+            });
+        }
+
+        // Add user to likedBy array
+        video.likedBy.push(userId);
+        await video.save();
+
+        return res.status(200).json({
+            message: "Video liked successfully",
+            video,
+        });
+    }
+    catch (error) {
+        console.error(error);
+        next(error);
+    }
+}
+
+export const dislikeVideo = async (req, res, next) => {
+    try {
+        const { videoId } = req.params;
+        const userId = req.user._id;
+
+        if (!videoId) {
+            return res.status(400).json({
+                message: "Video ID is required",
+            });
+        }
+        // Check if the user has already disliked the video
+        const video = await Video.findById(videoId);
+        if (!video) {
+            return res.status(404).json({
+                message: "Video not found",
+            });
+        }
+
+        if (video.dislikedBy.includes(userId)) {
+            return res.status(400).json({
+                message: "You have already disliked this video",
+            });
+        }
+        // Check if the user has already liked the video
+        if (video.likedBy.includes(userId)) {
+            // Remove user from likes array
+            video.likedBy = video.likedBy.filter((id) => id.toString() !== userId.toString());
+        }
+        // Add user to dislikedBy array
+        video.dislikedBy.push(userId);
+        await video.save();
+        return res.status(200).json({
+            message: "Video disliked successfully",
+            video,
+        });
+
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+}
+
+export const viewVideo = async (req, res, next) => {
+    try {
+        const { videoId } = req.params;
+        const userId = req.user._id;
+
+        if (!videoId) {
+            return res.status(400).json({
+                message: "Video ID is required",
+            });
+        }
+
+        // Check if the user has already viewed the video
+        const video = await Video.findById(videoId);
+        if (!video) {
+            return res.status(404).json({
+                message: "Video not found",
+            });
+        }
+
+        if (video.viewedBy.includes(userId)) {
+            return res.status(400).json({
+                message: "You have already viewed this video",
+            });
+        }
+
+        // Add user to viewedBy array
+        video.viewedBy.push(userId);
+        await video.save();
+
+        return res.status(200).json({
+            message: "Video viewed successfully",
+            video,
+        });
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+}

@@ -1,11 +1,25 @@
 import { Router } from "express";
-import { updateVideo, uploadVideo } from "../controllers/video_controller.js";
+import {
+    deleteVideo,
+    dislikeVideo,
+    getAllVideos,
+    getVideoById,
+    likeVideo,
+    updateVideo,
+    uploadVideo,
+    viewVideo,
+} from "../controllers/video_controller.js";
 import { authenticateUser } from "../middlewares/auth_middleware.js";
 import upload from "../middlewares/upload_middleware.js";
 
 const router = Router();
 
 router
+    .get("/", authenticateUser, getAllVideos)
+    .get("/:videoId", authenticateUser, getVideoById)
+    .get("/like/:videoId", authenticateUser, likeVideo)
+    .get("/dislike/:videoId", authenticateUser, dislikeVideo)
+    .get("/view/:videoId", authenticateUser, viewVideo)
     .post(
         "/",
         authenticateUser,
@@ -35,12 +49,7 @@ router
             },
         ]),
         updateVideo
-    );
-// .delete("/", "")
-// .get("/", "")
-// .get("/:id", "")
-// .post("/like", "")
-// .post("/dislike-video/:id", "")
-// .post("/view-video/:id", "")
+    )
+    .delete("/:videoId", authenticateUser, deleteVideo);
 
 export default router;
