@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 
 import userRoutes from "./routes/user_routes.js";
 import videoRoutes from "./routes/video_routes.js";
+import commentRoutes from "./routes/comment_routes.js";
 import { ErrorHandler } from "./middlewares/error_middleware.js";
 
 const app = express();
@@ -14,6 +15,7 @@ app.use(cookieParser());
 
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/video", videoRoutes);
+app.use("/api/v1/comment", commentRoutes);
 
 app.use(ErrorHandler);
 

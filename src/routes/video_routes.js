@@ -8,7 +8,7 @@ import {
     updateVideo,
     uploadVideo,
     viewVideo,
-} from "../controllers/video_controller.js";
+} from "../controllers/video_controllers.js";
 import { authenticateUser } from "../middlewares/auth_middleware.js";
 import upload from "../middlewares/upload_middleware.js";
 
